@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as xp
 import heapq
 
 class Variable(object):
@@ -18,7 +18,7 @@ class Variable(object):
         if self.creator is None:
             return
         if self.data.size == 1 and self.grad is None:  # Loss variable
-            self.grad = np.ones_like(self.data)
+            self.grad = xp.ones_like(self.data)
 
         cand_funcs = []
         seen_set = set()
@@ -88,7 +88,7 @@ class Link(object):
 
     def __init__(self, **params):
         for name, value in params.items():
-            grad = np.full_like(value, 0)
+            grad = xp.full_like(value, 0)
             var = Variable(value, grad, name)
             self.__dict__[name] = var
 
@@ -127,12 +127,12 @@ class Chain(Link):
 class Linear(Link):
 
     def __init__(self, in_size, out_size):
-        n = np.random.normal
-        scale = np.sqrt(2) * np.sqrt(2. / in_size)
+        n = xp.random.normal
+        scale = xp.sqrt(2. / in_size)
         W = n(loc=0.0, scale=scale, size=(out_size, in_size))
         b = n(loc=0.0, scale=scale, size=(out_size,))
         super(Linear, self).__init__(
-            W=W.astype(np.float32), b=b.astype(np.float32))
+            W=W.astype(xp.float32), b=b.astype(xp.float32))
 
     def __call__(self, x):
         return LinearFunction()(x, self.W, self.b)
@@ -154,7 +154,7 @@ class LinearFunction(Function):
 class ReLU(Function):
 
     def forward(self, inputs):
-        return np.maximum(inputs[0], 0),
+        return xp.maximum(inputs[0], 0),
 
     def backward(self, inputs, grad_outputs):
         return grad_outputs[0] * (inputs[0] > 0),

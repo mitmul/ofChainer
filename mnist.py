@@ -4,6 +4,13 @@ from sklearn.datasets import fetch_mldata
 import argparse
 import cupy as xp
 import numpy as np
+import sys
+
+if 'linux' in sys.platform:
+    import matplotlib
+    matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=-1)
@@ -50,8 +57,5 @@ if __name__ == '__main__':
             n_iter += 1
             losses.append(loss.data)
 
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
     plt.plot(losses)
     plt.savefig('loss.png')
