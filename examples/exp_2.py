@@ -1,5 +1,7 @@
-import numpy
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+import numpy as xp
 
 class Variable(object):
 
@@ -9,6 +11,14 @@ class Variable(object):
 
     def set_creator(self, gen_func):
         self.creator = gen_func
+
+    def backward(self):
+        if self.creator is None:  # input data
+            return
+        func = self.creator
+        while func:
+            func.backward(inputs, grad_outputs)
+            func = func.inputs[0].creator
 
 
 class Function(object):
@@ -32,7 +42,7 @@ class Function(object):
     def backward(self, inputs, grad_outputs):
         return 1 * grad_outputs
 
-data = numpy.array([0, 1, 2, 3])
+data = xp.array([0, 1, 2, 3])
 x = Variable(data)
 
 f_1 = Function()
@@ -46,3 +56,10 @@ print(y_2.creator.inputs[0])                         # => y_1
 print(y_2.creator.inputs[0].creator)                 # => f_1
 print(y_2.creator.inputs[0].creator.inputs[0])       # => x
 print(y_2.creator.inputs[0].creator.inputs[0].data)  # => data
+
+def test(*a):
+    print(a)
+
+
+test(1, 2, 3)
+test(1)
