@@ -3,6 +3,7 @@
 
 import numpy as xp
 
+
 class Variable(object):
 
     def __init__(self, data):
@@ -17,49 +18,43 @@ class Variable(object):
             return
         func = self.creator
         while func:
-            func.backward(inputs, grad_outputs)
-            func = func.inputs[0].creator
+            gy = func.output.grad
+            func.input.grad = func.backward(gy)
+            func = func.input.creator
 
 
 class Function(object):
 
-    def __call__(self, *inputs):
-        in_data = [x.data for x in inputs]
-        outputs = self.forward(in_data)
-        ret = [Variable(y) for y in outputs]
-        for y in ret:
-            y.set_creator(self)
-        self.inputs = inputs
-        self.outputs = ret
-        if len(ret) == 1:
-            return ret[0]
-        else:
-            return ret
+    def __call__(self, in_var):
+        in_data = in_var.data
+        output = self.forward(in_data)
+        ret = Variable(output)
+        ret.set_creator(self)
+        self.input = in_var
+        self.output = ret
+        return ret
 
-    def forward(self, inputs):
-        return inputs
+    def forward(self, in_data):
+        return in_data ** 2
 
-    def backward(self, inputs, grad_outputs):
-        return 1 * grad_outputs
+    def backward(self, gy):
+        gx = 2 * self.input.data
+        # パラメータがある場合、ここでgxを使ったパラメータの更新を行う
+        return gy * gx
 
 data = xp.array([0, 1, 2, 3])
 x = Variable(data)
 
 f_1 = Function()
-y_1 = f_1(x)
+y_1 = f_1(x)       # y_1 = x^2
 f_2 = Function()
-y_2 = f_2(y_1)
+y_2 = f_2(y_1)     # y_2 = (x^2)^2
 
+print(y_1.data)
 print(y_2.data)
-print(y_2.creator)                                   # => f_2
-print(y_2.creator.inputs[0])                         # => y_1
-print(y_2.creator.inputs[0].creator)                 # => f_1
-print(y_2.creator.inputs[0].creator.inputs[0])       # => x
-print(y_2.creator.inputs[0].creator.inputs[0].data)  # => data
 
-def test(*a):
-    print(a)
+y_2.grad = 1
+y_2.backward()
 
-
-test(1, 2, 3)
-test(1)
+print(y_1.grad)  # d y_2 / d y_1 = 2
+print(x.grad)    # d y_2 / d x = 4
